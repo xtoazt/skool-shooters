@@ -1,0 +1,79 @@
+<!DOCTYPE html><html lang="en" translate="no"><head>
+    <!--
+        SPDX-FileCopyrightText: 2024 Softbear, Inc.
+        SPDX-License-Identifier: AGPL-3.0-or-later
+    -->
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1.0,user-scalable=no">
+    <title>Mazean</title>
+    <meta name="description" content="Mazean is a multiplayer laser FPS game. It is free to play online in a web browser with no install required. Choose your favorite weapon and defeat rivals to earn points.">
+    <meta name="keywords" content="game, fps, laser, multiplayer, free">
+    <meta name="theme-color" content="#91a1b6">
+    <meta property="og:title" content="Mazean">
+    <meta name="og:description" content="Mazean is a multiplayer laser FPS game. It is free to play online in a web browser with no install required. Choose your favorite weapon and defeat rivals to earn points.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://mazean.com/data/512x512.png">
+    <link rel="canonical" href="https://mazean.com/">
+    <link rel="icon" href="/favicon.png">
+    <link rel="manifest" href="/data/manifest.json">
+    <script>
+        function request_pointer_lock_with_unadjusted_movement(e) {
+            const promise = e.requestPointerLock({unadjustedMovement: true});
+            if (promise) {
+                promise.catch(er => {
+                    if (er.name === "NotSupportedError") {
+                        e.requestPointerLock();
+                    }
+                });
+            }
+        }
+    </script>
+    <script type="module">import init from '/client.js';init('/client_bg.wasm');</script>
+    
+    
+
+    <script>
+        try {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (const registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        } catch (e) {
+            console.log(e);
+        }
+
+        function startLoadInterval() {
+            let time = 0;
+            let warning = document.getElementById("load_warning");
+            let warningText = document.getElementById("load_warning_text");
+            const interval = setInterval(() => {
+                if (document.getElementById("canvas")) {
+                    // Loaded.
+                    clearInterval(interval);
+                    if (warning && warning.style) {
+                        warning.style.display = "none";
+                    }
+                    return;
+                }
+
+                if (time > 5) {
+                    warning.style.display = "initial";
+                    warningText.innerText = `Loading taking longer than expected (${Math.floor(time)}s)`;
+                }
+                time += 0.5;
+            }, 500);
+        }
+    </script>
+
+<link rel="preload" href="/client_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/client.js"></head>
+<body style="background-color: #91a1b6;" onload="startLoadInterval()">
+    <div id="load_warning" style="display: none; font-family: sans-serif; padding: 1rem; color: white; position: absolute; left: 50%; text-align: center; top: 50%; transform: translate(-50%, -50%);">
+        <h2 style="margin-top: 0;" id="load_warning_text"></h2>
+        <button onclick="window.location.reload()" style="width: 10rem; height: 3rem; border-radius: 0.5rem; background-color: #505050; border: 2px solid #606060; color: white; font-size: 1.2rem; cursor: pointer;">Click to retry</button>
+    </div>
+
+
+</body></html>
