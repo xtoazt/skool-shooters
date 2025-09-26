@@ -11,6 +11,8 @@ export class GameScreen {
   private fpsController: FPSController | null = null;
   private currentRoom: GameRoom | null = null;
   private currentPlayer: Player | null = null;
+  private lastSyncTime = 0;
+  private syncInterval = 100; // Sync every 100ms instead of every frame
 
   constructor(gameApp: GameApp) {
     this.gameApp = gameApp;
@@ -318,6 +320,13 @@ export class GameScreen {
   }
 
   private syncPlayerPosition(position: Vector3, rotation: Vector3): void {
+    // Throttle Firebase updates for better performance
+    const now = Date.now();
+    if (now - this.lastSyncTime < this.syncInterval) {
+      return;
+    }
+    this.lastSyncTime = now;
+    
     // Send position update to Firebase for multiplayer sync
     if (this.currentPlayer && this.currentRoom) {
       // This would update Firebase with the new position
@@ -371,13 +380,23 @@ export class GameScreen {
   }
 
   private startGameLoop(): void {
-    const gameLoop = () => {
+    let lastTime = 0;
+    const targetFPS = 60;
+    const frameTime = 1000 / targetFPS;
+    
+    const gameLoop = (currentTime: number) => {
+      // Calculate delta time with capping
+      const deltaTime = Math.min((currentTime - lastTime) / 1000, 1/30);
+      lastTime = currentTime;
+      
       if (this.fpsController) {
-        this.fpsController.update(0.016); // ~60 FPS
+        this.fpsController.update(deltaTime);
       }
+      
       requestAnimationFrame(gameLoop);
     };
-    gameLoop();
+    
+    gameLoop(0);
   }
 
   private handleKeyDown(event: KeyboardEvent): void {

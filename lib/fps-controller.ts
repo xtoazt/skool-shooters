@@ -17,11 +17,15 @@ export class FPSController {
   private isShooting = false;
   private lastShotTime = 0;
   private raycaster: THREE.Raycaster = new THREE.Raycaster();
-  private mouseSensitivity = 0.002;
-  private moveSpeed = 5.0;
-  private jumpSpeed = 8.0;
-  private gravity = -25.0;
+  private mouseSensitivity = 0.003;
+  private moveSpeed = 8.0;
+  private sprintSpeed = 12.0;
+  private jumpSpeed = 10.0;
+  private gravity = -30.0;
   private groundY = 0;
+  private acceleration = 50.0;
+  private friction = 0.85;
+  private airFriction = 0.95;
 
   // Event callbacks
   private onShootCallback?: (target: THREE.Vector3) => void;
@@ -77,7 +81,7 @@ export class FPSController {
         this.interact();
         break;
       case 'ShiftLeft':
-        this.moveSpeed = 8.0; // Sprint
+        // Sprint handled in update method
         break;
     }
   }
@@ -97,7 +101,7 @@ export class FPSController {
         this.moveRight = false;
         break;
       case 'ShiftLeft':
-        this.moveSpeed = 5.0; // Normal speed
+        // Sprint handled in update method
         break;
     }
   }
@@ -253,49 +257,58 @@ export class FPSController {
     if (this.moveLeft) this.direction.x -= 1;
     if (this.moveRight) this.direction.x += 1;
 
-    // Normalize direction
+    // Normalize direction for consistent diagonal movement
     if (this.direction.length() > 0) {
       this.direction.normalize();
     }
 
-    // Apply movement
+    // Determine current speed based on sprint and aiming
+    const isSprinting = this.moveForward && !this.moveBackward && !this.isAiming;
+    const currentMoveSpeed = isSprinting ? this.sprintSpeed : this.moveSpeed;
+    const finalMoveSpeed = this.isAiming ? currentMoveSpeed * 0.6 : currentMoveSpeed;
+
+    // Calculate movement in world space
+    const forward = new THREE.Vector3();
+    const right = new THREE.Vector3();
+    
+    this.camera.getWorldDirection(forward);
+    forward.y = 0;
+    forward.normalize();
+    
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0));
+    
+    // Calculate desired velocity
+    const desiredVelocity = new THREE.Vector3();
+    desiredVelocity.addScaledVector(forward, -this.direction.z * finalMoveSpeed);
+    desiredVelocity.addScaledVector(right, this.direction.x * finalMoveSpeed);
+
+    // Apply acceleration for smooth movement
     if (this.direction.length() > 0) {
-      const moveSpeed = this.isAiming ? this.moveSpeed * 0.5 : this.moveSpeed;
-      
-      // Calculate movement in world space
-      const forward = new THREE.Vector3();
-      const right = new THREE.Vector3();
-      
-      this.camera.getWorldDirection(forward);
-      forward.y = 0;
-      forward.normalize();
-      
-      right.crossVectors(forward, new THREE.Vector3(0, 1, 0));
-      
-      const movement = new THREE.Vector3();
-      movement.addScaledVector(forward, -this.direction.z * moveSpeed * deltaTime);
-      movement.addScaledVector(right, this.direction.x * moveSpeed * deltaTime);
-      
-      this.velocity.x = movement.x;
-      this.velocity.z = movement.z;
+      // Accelerate towards desired velocity
+      this.velocity.x += (desiredVelocity.x - this.velocity.x) * this.acceleration * deltaTime;
+      this.velocity.z += (desiredVelocity.z - this.velocity.z) * this.acceleration * deltaTime;
     } else {
-      this.velocity.x *= 0.8; // Friction
-      this.velocity.z *= 0.8;
+      // Apply friction when not moving
+      const currentFriction = this.canJump ? this.friction : this.airFriction;
+      this.velocity.x *= Math.pow(currentFriction, deltaTime * 60);
+      this.velocity.z *= Math.pow(currentFriction, deltaTime * 60);
     }
 
     // Apply gravity
     this.velocity.y += this.gravity * deltaTime;
 
-    // Update position
+    // Update position with smooth interpolation
     const newPosition = this.camera.position.clone();
     newPosition.add(this.velocity.clone().multiplyScalar(deltaTime));
 
-    // Ground collision
-    if (newPosition.y <= this.groundY + 1.8) { // Eye level
+    // Ground collision with smooth landing
+    if (newPosition.y <= this.groundY + 1.8) {
       newPosition.y = this.groundY + 1.8;
-      this.velocity.y = 0;
-      this.canJump = true;
-      this.isJumping = false;
+      if (this.velocity.y < 0) {
+        this.velocity.y = 0;
+        this.canJump = true;
+        this.isJumping = false;
+      }
     }
 
     // Update camera position
@@ -303,11 +316,11 @@ export class FPSController {
 
     // Update player position
     this.player.position.x = newPosition.x;
-    this.player.position.y = newPosition.y - 1.8; // Adjust for eye level
+    this.player.position.y = newPosition.y - 1.8;
     this.player.position.z = newPosition.z;
 
-    // Call movement callback
-    if (this.onPlayerMoveCallback) {
+    // Call movement callback with throttling for performance
+    if (this.onPlayerMoveCallback && this.isMoving()) {
       this.onPlayerMoveCallback(this.player.position, this.player.rotation);
     }
   }

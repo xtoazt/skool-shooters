@@ -35,15 +35,20 @@ export class ThreeEngine {
     );
     this.camera.position.set(0, 1.8, 0); // Eye level
 
-    // Create renderer
+    // Create renderer with optimized settings
     this.renderer = new THREE.WebGLRenderer({ 
       antialias: true,
-      alpha: true
+      alpha: true,
+      powerPreference: "high-performance",
+      stencil: false,
+      depth: true
     });
     this.renderer.setSize(container.clientWidth, container.clientHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap pixel ratio for performance
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.physicallyCorrectLights = false; // Disable for better performance
     
     container.appendChild(this.renderer.domElement);
 
@@ -169,36 +174,44 @@ export class ThreeEngine {
   }
 
   private startRenderLoop(): void {
-    const animate = () => {
+    let lastTime = 0;
+    const targetFPS = 60;
+    const frameTime = 1000 / targetFPS;
+    
+    const animate = (currentTime: number) => {
       this.animationId = requestAnimationFrame(animate);
       
-      const deltaTime = this.clock.getDelta();
+      // Cap delta time to prevent large jumps
+      const deltaTime = Math.min((currentTime - lastTime) / 1000, 1/30);
+      lastTime = currentTime;
+      
       this.update(deltaTime);
       this.renderer.render(this.scene, this.camera);
     };
     
-    animate();
+    animate(0);
   }
 
   private update(deltaTime: number): void {
-    // Update player animations
+    const elapsedTime = this.clock.getElapsedTime();
+    
+    // Update player animations with smooth interpolation
     this.players.forEach((playerGroup, playerId) => {
-      // Animate player movement
       if (playerGroup.userData.isMoving) {
-        playerGroup.rotation.y += deltaTime * 2;
+        playerGroup.rotation.y += deltaTime * 3;
       }
     });
 
-    // Update power-ups
+    // Update power-ups with smooth floating animation
     this.powerUps.forEach((powerUp) => {
-      powerUp.rotation.y += deltaTime;
-      powerUp.position.y = Math.sin(this.clock.getElapsedTime() * 2) * 0.2;
+      powerUp.rotation.y += deltaTime * 2;
+      powerUp.position.y = Math.sin(elapsedTime * 3 + powerUp.userData.offset || 0) * 0.3 + 1;
     });
 
-    // Update weapons
+    // Update weapons with smooth firing animation
     this.weapons.forEach((weapon) => {
       if (weapon.userData.isFiring) {
-        weapon.rotation.x += deltaTime * 10;
+        weapon.rotation.x += deltaTime * 15;
       }
     });
   }
@@ -384,7 +397,8 @@ export class ThreeEngine {
     powerUpGroup.userData = {
       powerUpId,
       type,
-      collected: false
+      collected: false,
+      offset: Math.random() * Math.PI * 2 // Random offset for varied animation
     };
 
     this.powerUps.set(powerUpId, powerUpGroup);
