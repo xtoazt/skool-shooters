@@ -30,11 +30,13 @@ export class GameApp {
 
   async initialize(): Promise<void> {
     try {
-      // Initialize Google Maps
-      await this.googleMapsService.initialize();
-      
-      // Show home screen
+      // Show home screen first
       this.showHomeScreen();
+      
+      // Initialize Google Maps in background (non-blocking)
+      this.googleMapsService.initialize().catch(error => {
+        console.warn('Google Maps initialization failed, but game will continue:', error);
+      });
     } catch (error) {
       console.error('Failed to initialize game app:', error);
       throw error;
@@ -118,21 +120,33 @@ export class GameApp {
 
   // Location management
   async getRandomLocation(): Promise<GameLocation | null> {
-    const randomCity = GoogleMapsService.getRandomCity();
-    const streetViewData = await this.googleMapsService.getStreetViewData(randomCity.lat, randomCity.lng);
-    
-    if (streetViewData) {
-      return {
-        lat: streetViewData.position.lat,
-        lng: streetViewData.position.lng,
-        heading: streetViewData.pov.heading,
-        pitch: streetViewData.pov.pitch,
-        city: randomCity.city,
-        country: randomCity.country
-      };
+    try {
+      const randomCity = GoogleMapsService.getRandomCity();
+      const streetViewData = await this.googleMapsService.getStreetViewData(randomCity.lat, randomCity.lng);
+      
+      if (streetViewData) {
+        return {
+          lat: streetViewData.position.lat,
+          lng: streetViewData.position.lng,
+          heading: streetViewData.pov.heading,
+          pitch: streetViewData.pov.pitch,
+          city: randomCity.city,
+          country: randomCity.country
+        };
+      }
+    } catch (error) {
+      console.warn('Google Maps failed, using fallback location:', error);
     }
     
-    return null;
+    // Fallback to a default location if Google Maps fails
+    return {
+      lat: 40.7128,
+      lng: -74.0060,
+      heading: 0,
+      pitch: 0,
+      city: 'New York',
+      country: 'USA'
+    };
   }
 
   async getLocationByCoordinates(lat: number, lng: number): Promise<GameLocation | null> {

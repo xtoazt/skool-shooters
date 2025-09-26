@@ -138,21 +138,28 @@ export class HomeScreen {
     const button = document.getElementById('random-city-btn') as HTMLButtonElement;
     const originalText = button.innerHTML;
     
-    button.innerHTML = '<span class="button-icon">⏳</span> Finding Location...';
+    button.innerHTML = '<span class="button-icon">⏳</span> Loading Game...';
     button.disabled = true;
 
     try {
+      console.log('Getting random location...');
       const location = await this.gameApp.getRandomLocation();
+      console.log('Location received:', location);
+      
       if (location) {
         // Create a single-player game with random location
+        console.log('Creating single player room...');
         const room = await this.createSinglePlayerRoom(location);
+        console.log('Room created:', room);
+        
+        console.log('Showing game screen...');
         this.gameApp.showGameScreen(room, this.gameApp.getCurrentPlayer()!);
       } else {
         this.showError('Could not find a suitable location. Please try again.');
       }
     } catch (error) {
       console.error('Error getting random location:', error);
-      this.showError('Failed to load location. Please check your internet connection.');
+      this.showError('Failed to load game. Please try again.');
     } finally {
       button.innerHTML = originalText;
       button.disabled = false;
