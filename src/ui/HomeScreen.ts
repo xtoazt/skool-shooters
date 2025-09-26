@@ -142,17 +142,11 @@ export class HomeScreen {
     button.disabled = true;
 
     try {
-      console.log('Getting random location...');
       const location = await this.gameApp.getRandomLocation();
-      console.log('Location received:', location);
       
       if (location) {
         // Create a single-player game with random location
-        console.log('Creating single player room...');
         const room = await this.createSinglePlayerRoom(location);
-        console.log('Room created:', room);
-        
-        console.log('Showing game screen...');
         this.gameApp.showGameScreen(room, this.gameApp.getCurrentPlayer()!);
       } else {
         this.showError('Could not find a suitable location. Please try again.');

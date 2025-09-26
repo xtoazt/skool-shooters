@@ -48,7 +48,7 @@ export class ThreeEngine {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.physicallyCorrectLights = false; // Disable for better performance
+    this.renderer.useLegacyLights = true; // Use legacy lights to avoid deprecation warnings
     
     container.appendChild(this.renderer.domElement);
 
@@ -454,8 +454,7 @@ export class ThreeEngine {
       const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
       this.scene.add(skybox);
     } catch (error) {
-      console.warn('Failed to load Street View texture:', error);
-      // Fallback to solid color
+      // Silently fallback to solid color - Street View is optional
       skyboxMaterial.color.setHex(0x87CEEB);
     }
   }

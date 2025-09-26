@@ -135,32 +135,25 @@ export class GameScreen {
 
   private async initializeGame(room: GameRoom, player: Player): Promise<void> {
     try {
-      console.log('Initializing Three.js engine...');
-      
       // Initialize Three.js engine
       if (this.gameContainer) {
         this.gameContainer.innerHTML = '';
         await this.threeEngine.initialize(this.gameContainer);
-        console.log('Three.js engine initialized');
       }
 
       // Load Street View as skybox (optional)
       try {
         await this.threeEngine.loadStreetView(room.location);
-        console.log('Street View loaded');
       } catch (error) {
-        console.warn('Street View failed to load, continuing without it:', error);
+        // Street View is optional, continue without it
       }
 
       // Initialize FPS controller
-      console.log('Initializing FPS controller...');
       this.fpsController = new FPSController(this.threeEngine.getCamera(), player);
       this.setupFPSController();
-      console.log('FPS controller initialized');
 
       // Add current player to scene
       this.threeEngine.addPlayer(player);
-      console.log('Player added to scene');
 
       // Add other players to scene
       room.players.forEach(p => {
@@ -171,11 +164,9 @@ export class GameScreen {
 
       // Spawn some power-ups
       this.spawnPowerUps();
-      console.log('Power-ups spawned');
 
       // Initialize game mechanics
       this.initializeGameMechanics(room, player);
-      console.log('Game mechanics initialized');
       
     } catch (error) {
       console.error('Failed to initialize game:', error);
