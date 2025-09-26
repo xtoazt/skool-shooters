@@ -19,7 +19,7 @@ export class GameApp {
 
   constructor() {
     this.appContainer = document.getElementById('app')!;
-    this.googleMapsService = new GoogleMapsService('YOUR_GOOGLE_MAPS_API_KEY'); // Replace with actual API key
+    this.googleMapsService = new GoogleMapsService(); // Uses default API key
     
     // Initialize screens
     this.homeScreen = new HomeScreen(this);

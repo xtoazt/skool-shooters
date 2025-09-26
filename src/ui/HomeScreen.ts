@@ -32,11 +32,11 @@ export class HomeScreen {
           <div class="menu-section">
             <h2>Quick Play</h2>
             <button class="menu-button primary" id="random-city-btn">
-              <span class="button-icon">🌍</span>
+              <span class="button-icon">→</span>
               Random City
             </button>
             <button class="menu-button" id="select-city-btn">
-              <span class="button-icon">📍</span>
+              <span class="button-icon">→</span>
               Select City
             </button>
           </div>
@@ -44,11 +44,11 @@ export class HomeScreen {
           <div class="menu-section">
             <h2>Multiplayer</h2>
             <button class="menu-button" id="create-game-btn">
-              <span class="button-icon">🎮</span>
+              <span class="button-icon">→</span>
               Create Game
             </button>
             <button class="menu-button" id="join-game-btn">
-              <span class="button-icon">🔗</span>
+              <span class="button-icon">→</span>
               Join Game
             </button>
           </div>
@@ -56,7 +56,7 @@ export class HomeScreen {
           <div class="menu-section">
             <h2>Customization</h2>
             <button class="menu-button" id="customize-character-btn">
-              <span class="button-icon">👤</span>
+              <span class="button-icon">→</span>
               Customize Character
             </button>
           </div>
@@ -468,4 +468,5 @@ export class HomeScreen {
       }
     }, 5000);
   }
+
 }

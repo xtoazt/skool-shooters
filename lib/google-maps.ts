@@ -14,7 +14,7 @@ export class GoogleMapsService {
   private streetView: google.maps.StreetViewPanorama | null = null;
   private isInitialized = false;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string = 'AIzaSyB9vKASqiPS-xWAVBy5YlqOJLEvLwpA6iw') {
     this.loader = new Loader({
       apiKey,
       version: 'weekly',

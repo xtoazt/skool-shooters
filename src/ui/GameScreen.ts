@@ -1,16 +1,26 @@
 // Game screen with 3D FPS gameplay
 import { GameApp } from '../game/GameApp';
 import { GameRoom, Player } from '../../lib/types';
+import { ThreeEngine } from '../../lib/three-engine';
+import { FPSController } from '../../lib/fps-controller';
 
 export class GameScreen {
   private gameApp: GameApp;
   private gameContainer: HTMLElement | null = null;
+  private threeEngine: ThreeEngine;
+  private fpsController: FPSController | null = null;
+  private currentRoom: GameRoom | null = null;
+  private currentPlayer: Player | null = null;
 
   constructor(gameApp: GameApp) {
     this.gameApp = gameApp;
+    this.threeEngine = new ThreeEngine();
   }
 
   render(container: HTMLElement, room: GameRoom, player: Player): void {
+    this.currentRoom = room;
+    this.currentPlayer = player;
+
     // Load CSS if not already loaded
     if (!document.getElementById('game-styles')) {
       const link = document.createElement('link');
@@ -57,6 +67,13 @@ export class GameScreen {
             <div class="scoreboard">
               <div class="kills">Kills: ${player.kills}</div>
               <div class="deaths">Deaths: ${player.deaths}</div>
+            </div>
+          </div>
+          
+          <div class="minimap">
+            <div class="minimap-title">Map</div>
+            <div class="minimap-content" id="minimap">
+              <div class="minimap-player" id="minimap-player"></div>
             </div>
           </div>
         </div>
@@ -116,22 +133,31 @@ export class GameScreen {
 
   private async initializeGame(room: GameRoom, player: Player): Promise<void> {
     try {
-      // Initialize Google Street View
-      const streetViewContainer = document.createElement('div');
-      streetViewContainer.style.width = '100%';
-      streetViewContainer.style.height = '100%';
-      
+      // Initialize Three.js engine
       if (this.gameContainer) {
         this.gameContainer.innerHTML = '';
-        this.gameContainer.appendChild(streetViewContainer);
+        await this.threeEngine.initialize(this.gameContainer);
       }
 
-      const streetView = this.gameApp.getGoogleMapsService().createStreetView(streetViewContainer, {
-        position: { lat: room.location.lat, lng: room.location.lng },
-        pov: { heading: room.location.heading, pitch: room.location.pitch },
-        zoom: 1,
-        visible: true
+      // Load Street View as skybox
+      await this.threeEngine.loadStreetView(room.location);
+
+      // Initialize FPS controller
+      this.fpsController = new FPSController(this.threeEngine.getCamera(), player);
+      this.setupFPSController();
+
+      // Add current player to scene
+      this.threeEngine.addPlayer(player);
+
+      // Add other players to scene
+      room.players.forEach(p => {
+        if (p.id !== player.id) {
+          this.threeEngine.addPlayer(p);
+        }
       });
+
+      // Spawn some power-ups
+      this.spawnPowerUps();
 
       // Initialize game mechanics
       this.initializeGameMechanics(room, player);
@@ -142,10 +168,216 @@ export class GameScreen {
     }
   }
 
+  private setupFPSController(): void {
+    if (!this.fpsController) return;
+
+    // Set up shooting callback
+    this.fpsController.setOnShoot((target) => {
+      this.handleShoot(target);
+    });
+
+    // Set up reload callback
+    this.fpsController.setOnReload(() => {
+      this.handleReload();
+    });
+
+    // Set up movement callback
+    this.fpsController.setOnPlayerMove((position, rotation) => {
+      this.handlePlayerMove(position, rotation);
+    });
+  }
+
+  private spawnPowerUps(): void {
+    const powerUpTypes = ['health', 'ammo', 'speed', 'damage', 'shield', 'invisibility'];
+    
+    for (let i = 0; i < 10; i++) {
+      const type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+      const position = {
+        x: (Math.random() - 0.5) * 100,
+        y: 1,
+        z: (Math.random() - 0.5) * 100
+      };
+      
+      this.threeEngine.addPowerUp(`powerup_${i}`, type, position);
+    }
+  }
+
+  private handleShoot(target: THREE.Vector3): void {
+    if (!this.currentPlayer) return;
+
+    // Create bullet trail
+    const startPos = this.threeEngine.getCamera().position;
+    const endPos = startPos.clone().add(target.multiplyScalar(100));
+    
+    // Check for hits
+    this.checkForHits(startPos, endPos);
+    
+    // Update UI
+    this.updateAmmoDisplay();
+    
+    // Fire weapon in Three.js
+    this.threeEngine.fireWeapon(this.currentPlayer.weapon.id);
+  }
+
+  private handleReload(): void {
+    if (!this.currentPlayer) return;
+    
+    // Show reload animation
+    this.showReloadAnimation();
+    
+    // Update UI after reload
+    setTimeout(() => {
+      this.updateAmmoDisplay();
+    }, this.currentPlayer.weapon.reloadTime);
+  }
+
+  private handlePlayerMove(position: Vector3, rotation: Vector3): void {
+    if (!this.currentPlayer || !this.currentRoom) return;
+
+    // Update player position
+    this.currentPlayer.position = position;
+    this.currentPlayer.rotation = rotation;
+
+    // Update Three.js scene
+    this.threeEngine.updatePlayer(this.currentPlayer);
+
+    // Check for power-up collection
+    this.checkPowerUpCollection(position);
+
+    // Send to Firebase for multiplayer sync
+    this.syncPlayerPosition(position, rotation);
+  }
+
+  private checkForHits(startPos: THREE.Vector3, endPos: THREE.Vector3): void {
+    // Simple hit detection - in a real game, this would be more sophisticated
+    const raycaster = new THREE.Raycaster();
+    raycaster.set(startPos, endPos.clone().sub(startPos).normalize());
+    
+    // Check against other players
+    if (this.currentRoom) {
+      this.currentRoom.players.forEach(player => {
+        if (player.id !== this.currentPlayer?.id) {
+          // Simple distance check
+          const playerPos = new THREE.Vector3(player.position.x, player.position.y, player.position.z);
+          const distance = startPos.distanceTo(playerPos);
+          
+          if (distance < 5) { // Hit!
+            this.handlePlayerHit(player);
+          }
+        }
+      });
+    }
+  }
+
+  private handlePlayerHit(targetPlayer: Player): void {
+    if (!this.currentPlayer) return;
+
+    // Apply damage
+    const damage = this.currentPlayer.weapon.damage;
+    targetPlayer.health -= damage;
+
+    // Update UI
+    this.updateHealthDisplay();
+
+    // Check if player died
+    if (targetPlayer.health <= 0) {
+      this.handlePlayerDeath(targetPlayer);
+    }
+
+    // Update Three.js scene
+    this.threeEngine.updatePlayer(targetPlayer);
+  }
+
+  private handlePlayerDeath(player: Player): void {
+    player.isAlive = false;
+    player.deaths++;
+    
+    // Award kill to shooter
+    if (this.currentPlayer) {
+      this.currentPlayer.kills++;
+    }
+
+    // Respawn after delay
+    setTimeout(() => {
+      this.respawnPlayer(player);
+    }, 5000);
+  }
+
+  private respawnPlayer(player: Player): void {
+    player.health = player.maxHealth;
+    player.isAlive = true;
+    player.position = { x: 0, y: 0, z: 0 }; // Respawn at center
+    
+    this.threeEngine.updatePlayer(player);
+  }
+
+  private checkPowerUpCollection(position: Vector3): void {
+    // Check if player is near any power-ups
+    // This would use more sophisticated collision detection in a real game
+    console.log('Checking power-up collection at:', position);
+  }
+
+  private syncPlayerPosition(position: Vector3, rotation: Vector3): void {
+    // Send position update to Firebase for multiplayer sync
+    if (this.currentPlayer && this.currentRoom) {
+      // This would update Firebase with the new position
+      console.log('Syncing player position:', position);
+    }
+  }
+
+  private updateAmmoDisplay(): void {
+    if (!this.currentPlayer) return;
+    
+    const ammoElement = document.querySelector('.ammo-count');
+    if (ammoElement) {
+      ammoElement.textContent = `${this.currentPlayer.weapon.ammo}/${this.currentPlayer.weapon.maxAmmo}`;
+    }
+  }
+
+  private updateHealthDisplay(): void {
+    if (!this.currentPlayer) return;
+    
+    const healthBar = document.querySelector('.bar-fill.health') as HTMLElement;
+    if (healthBar) {
+      const healthPercent = (this.currentPlayer.health / this.currentPlayer.maxHealth) * 100;
+      healthBar.style.width = `${healthPercent}%`;
+    }
+    
+    const healthValue = document.querySelector('.stat-value');
+    if (healthValue) {
+      healthValue.textContent = `${this.currentPlayer.health}/${this.currentPlayer.maxHealth}`;
+    }
+  }
+
+  private showReloadAnimation(): void {
+    // Show reload animation in UI
+    const weaponName = document.querySelector('.weapon-name');
+    if (weaponName) {
+      weaponName.textContent = 'Reloading...';
+      setTimeout(() => {
+        if (this.currentPlayer) {
+          weaponName.textContent = this.currentPlayer.weapon.name;
+        }
+      }, this.currentPlayer?.weapon.reloadTime || 2000);
+    }
+  }
+
   private initializeGameMechanics(room: GameRoom, player: Player): void {
-    // This will be expanded with Three.js integration
     console.log('Initializing game mechanics for room:', room.id);
     console.log('Player:', player.name);
+    
+    // Start game loop
+    this.startGameLoop();
+  }
+
+  private startGameLoop(): void {
+    const gameLoop = () => {
+      if (this.fpsController) {
+        this.fpsController.update(0.016); // ~60 FPS
+      }
+      requestAnimationFrame(gameLoop);
+    };
+    gameLoop();
   }
 
   private handleKeyDown(event: KeyboardEvent): void {

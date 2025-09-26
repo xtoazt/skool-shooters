@@ -5,13 +5,12 @@ import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { GameRoom, Player, GameEvent } from './types';
 
 const firebaseConfig = {
-  // Add your Firebase config here
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "your-app-id"
+  apiKey: "AIzaSyDiRlGy9VoWIiNXTsk45ml1qEFoPMUIf5I",
+  authDomain: "skool-93d98.firebaseapp.com",
+  projectId: "skool-93d98",
+  storageBucket: "skool-93d98.firebasestorage.app",
+  messagingSenderId: "750051146241",
+  appId: "1:750051146241:web:1a3d5dbbf707f2d0b41e00"
 };
 
 // Initialize Firebase

@@ -1,124 +1,182 @@
-/* Home Screen Styles */
+/* Home Screen Styles - Modern Dark Mode */
 .home-screen {
   width: 100%;
   height: 100vh;
+  background: #1a1a1a;
+  color: #f5f5f5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  font-family: 'Arial', sans-serif;
+}
+
+.home-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.01) 0%, transparent 50%);
+  z-index: 0;
 }
 
 .header {
+  position: relative;
+  z-index: 2;
+  padding: 60px 40px 40px;
   text-align: center;
-  margin-bottom: 60px;
 }
 
 .game-title {
-  font-size: 4rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
-  background-size: 400% 400%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradientShift 3s ease infinite;
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  font-size: 3.5rem;
+  font-weight: 300;
+  margin-bottom: 16px;
+  color: #f5f5f5;
+  letter-spacing: -0.02em;
+  font-family: 'Playfair Display', serif;
+  position: relative;
 }
 
 .game-subtitle {
-  font-size: 1.2rem;
-  opacity: 0.9;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #a0a0a0;
   margin: 0;
+  line-height: 1.5;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 .main-menu {
-  display: flex;
-  gap: 40px;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 1200px;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 1000px;
   width: 100%;
-  padding: 0 20px;
+  padding: 0 40px 40px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
 }
 
 .menu-section {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 30px;
-  min-width: 300px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #2a2a2a;
+  border-radius: 16px;
+  padding: 32px;
+  border: 1px solid #3a3a3a;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #4a4a4a, transparent);
+}
+
+.menu-section:hover {
+  transform: translateY(-4px);
+  border-color: #4a4a4a;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .menu-section h2 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  text-align: center;
-  color: #fff;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 24px;
+  color: #f5f5f5;
+  letter-spacing: -0.01em;
 }
 
 .menu-button {
   width: 100%;
-  padding: 15px 20px;
-  margin-bottom: 15px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 10px;
-  color: white;
-  font-size: 1.1rem;
+  padding: 16px 24px;
+  margin-bottom: 12px;
+  background: #3a3a3a;
+  border: 1px solid #4a4a4a;
+  border-radius: 12px;
+  color: #f5f5f5;
+  font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 10px;
-  justify-content: center;
+  gap: 12px;
+  justify-content: flex-start;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.menu-button:hover::before {
+  left: 100%;
 }
 
 .menu-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  background: #4a4a4a;
+  border-color: #5a5a5a;
+  transform: translateX(4px);
 }
 
 .menu-button.primary {
-  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-  border-color: #ff6b6b;
+  background: #f5f5f5;
+  border-color: #f5f5f5;
+  color: #1a1a1a;
 }
 
 .menu-button.primary:hover {
-  background: linear-gradient(45deg, #ff5252, #d63031);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+  background: #e5e5e5;
+  border-color: #e5e5e5;
+  transform: translateX(4px);
 }
 
 .menu-button:disabled {
-  opacity: 0.6;
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none;
 }
 
+.menu-button:disabled:hover {
+  transform: none;
+  background: #3a3a3a;
+}
+
 .button-icon {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
+  opacity: 0.8;
 }
 
 .footer {
-  position: absolute;
-  bottom: 20px;
+  position: relative;
+  z-index: 2;
+  padding: 20px 40px;
   text-align: center;
-  opacity: 0.7;
-  font-size: 0.9rem;
+  color: #666;
+  font-size: 0.85rem;
+  border-top: 1px solid #3a3a3a;
+  margin-top: auto;
 }
 
 /* Modal Styles */
@@ -128,24 +186,25 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(8px);
 }
 
 .modal {
-  background: white;
-  border-radius: 15px;
+  background: #2a2a2a;
+  border-radius: 16px;
   padding: 0;
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
   animation: modalSlideIn 0.3s ease;
+  border: 1px solid #3a3a3a;
 }
 
 @keyframes modalSlideIn {
@@ -163,67 +222,78 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 25px;
-  border-bottom: 1px solid #eee;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 15px 15px 0 0;
+  padding: 24px 32px;
+  border-bottom: 1px solid #3a3a3a;
+  background: #2a2a2a;
+  color: #f5f5f5;
+  border-radius: 16px 16px 0 0;
 }
 
 .modal-header h3 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #f5f5f5;
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
-  color: white;
+  font-size: 1.25rem;
+  color: #a0a0a0;
   cursor: pointer;
-  padding: 0;
-  width: 30px;
-  height: 30px;
+  padding: 8px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s ease;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #3a3a3a;
+  color: #f5f5f5;
 }
 
 .modal-content {
-  padding: 25px;
+  padding: 32px;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #333;
+  color: #f5f5f5;
+  font-size: 0.9rem;
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 12px;
-  border: 2px solid #ddd;
+  padding: 12px 16px;
+  border: 1px solid #4a4a4a;
   border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
+  font-size: 0.95rem;
+  background: #3a3a3a;
+  color: #f5f5f5;
+  transition: all 0.2s ease;
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #5a5a5a;
+  background: #4a4a4a;
+}
+
+.form-group input::placeholder {
+  color: #666;
 }
 
 .location-options {
