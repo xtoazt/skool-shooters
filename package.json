@@ -1,6 +1,6 @@
 {
   "name": "skool-shooters",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A multiplayer 3D FPS game using Google Maps Street View",
   "main": "index.js",
   "scripts": {
