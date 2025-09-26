@@ -338,7 +338,7 @@ export class FPSController {
     return this.moveForward || this.moveBackward || this.moveLeft || this.moveRight;
   }
 
-  isAiming(): boolean {
+  getIsAiming(): boolean {
     return this.isAiming;
   }
 
